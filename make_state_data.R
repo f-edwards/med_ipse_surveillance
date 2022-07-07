@@ -143,7 +143,7 @@ full_panel<-full_panel %>%
   ungroup() %>% 
   bind_rows(full_panel)
 
-write_csv(full_panel, "fig3_dat.png")
+write_csv(full_panel, "fig3_dat.csv")
 
 ### 2019 data
 dat_19<-dat_in %>% 
@@ -183,6 +183,8 @@ order<-dat_19 %>%
 dat_19<-dat_19 %>% 
   mutate(state = factor(state, levels = order$state))
 
+write_csv(dat_19, "./data/fig4_dat.csv")
+
 ### 2019 disparity data
 dat_19_w<-dat_19 %>% 
   ungroup() %>% 
@@ -211,5 +213,5 @@ dat_19_disp<-dat_19_disp %>%
                        "Greater than white rate",
                        "Less than or equal to white rate"))
 
-
+write_csv(dat_19_disp, "./data/fig5_dat.csv")
 
