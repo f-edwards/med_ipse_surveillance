@@ -65,8 +65,16 @@ state_years<-dat_in %>%
 
 # figure 1 ----------------------------------------------------------------
 
+ncands_med<-read_csv("./data/fig1_dat.csv")
+ncands_med<-ncands_med %>% 
+  mutate(medical_rptsrc = factor(medical_rptsrc,
+                       levels = c("Medical professionals",
+                                  "All others")))
+
 ggplot(ncands_med, 
-       aes(x = year, y = rate, 
+       aes(x = year, y = rate_mean, 
+           ymin = rate_min,
+           ymax = rate_max,
            color = type)) +
   geom_point() + 
   geom_line() + 
@@ -75,23 +83,22 @@ ggplot(ncands_med,
   theme(legend.title = element_blank()) + 
   scale_x_continuous(breaks=c(2010, 2012, 2014, 2016, 2018)) 
 
-ggsave(ncands_med, "./vis/fig1.png", width = 6, height = 4)
+ggsave("./vis/fig1.png", width = 6, height = 4)
 
+
+### text call outs
+ncands_med %>% 
+  group_by(medical_rptsrc, year) %>% 
+  summarise(n_mean = sum(n_mean),
+            n_min = sum(n_min),
+            n_max = sum(n_max))
 
 # figure 2 ----------------------------------------------------------------
 
-fig_dat<-read_csv("./data/med_race_10_19_national.csv")
-
-fig_dat <- fig_dat %>% 
-  mutate(medical_rptsrc = 
-           case_when(medical_rptsrc == T ~ "Medical professionals",
-                     medical_rptsrc == F ~ "All others"))  %>% 
-  mutate(medical_rptsrc = factor(medical_rptsrc,
-                                 levels = c("Medical professionals",
-                                            "All others"))) 
+fig_dat<-read_csv("./data/fig2_dat.csv")
 
 ggplot(fig_dat %>% 
-         filter(medical_rptsrc=="Medical professionals"), 
+         filter(medical_rptsrc==T), 
        aes(x = year,
            y = rate_bar,
            ymin = rate_min,
@@ -104,7 +111,7 @@ ggplot(fig_dat %>%
   scale_x_continuous(breaks=c(2010, 2012, 2014, 2016, 2018))+ 
   scale_fill_brewer(palette = "Dark2") + 
   scale_color_brewer(palette = "Dark2") +
-  labs(x = "Year", y = "Rate per 1,000 population",
+  labs(x = "Year", y = "Rate per 1,000 infants",
        color = "",
        fill = "") + 
   theme_bw()
@@ -120,11 +127,16 @@ ggplot(full_panel %>%
        aes(x = year, y = r_mn,
            ymin = r_min,
            ymax = r_max,
-           color = factor(ipse))) + 
+           color = factor(ipse),
+           fill = factor(ipse))) + 
   geom_line() + 
+  geom_ribbon(aes(color = NULL), alpha = 0.5) + 
   facet_wrap(~state) + 
   scale_x_continuous(breaks=c(2012, 2015, 2018)) + 
-  labs(x = "Year", y = "Rate per 1,000 infants", color = "")
+  labs(x = "Year", 
+       y = "Rate per 1,000 infants", 
+       color = "",
+       fill = "")
 
 ggsave("./vis/fig3.png", width = 8, height = 4)
   

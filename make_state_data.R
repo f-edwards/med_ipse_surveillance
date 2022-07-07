@@ -7,7 +7,7 @@
 #
 # log: pre-review cleanup (6/8/22)
 #
-
+rm(list=ls())
 ### make figures for medical ipse surveillance
 library(tidyverse)
 library(scales)
@@ -21,31 +21,6 @@ theme_set(theme_bw())
 excluded<-c("FL", "IA", "NY", "PA",
             "CO", "MO", "NC", "SD", 
             "VT", "WI")
-
-##### FIGURE 1
-### use national NCANDS to look at time series as of med reporting
-### by malt type
-ncands_med<- read_csv("./data/ncands_natl_med.csv")
-
-### recode for presentation
-ncands_med<-ncands_med %>% 
-  mutate(medical_rptsrc = 
-           case_when(medical_rptsrc == T ~ "Medical professionals",
-                     medical_rptsrc == F ~ "All others")) %>% 
-  mutate(type = case_when(
-    type == "neglect" ~ "Neglect",
-    type == "phy_abuse" ~ "Physical abuse",
-    type == "sex_abuse" ~ "Sexual abuse",
-    type == "other" ~ "Other"
-  )) %>% 
-  mutate(type = factor(type,
-                       levels = c("Neglect",
-                                  "Physical abuse",
-                                  "Sexual abuse",
-                                  "Other"))) %>% 
-  mutate(medical_rptsrc = factor(medical_rptsrc,
-                                 levels = c("Medical professionals",
-                                            "All others")))
 
 
 ### load and process SEER population data
@@ -127,24 +102,24 @@ temp<-dat_in %>%
          r_min = n_min / pop * 1e3,
          r_max = n_max / pop * 1e3) %>% 
   mutate(ipse = factor(ipse))
-
-library(geofacet)
-ggplot(temp,
-       aes(x = year, ymin = r_min,
-           ymax = r_max,
-           y = r_mn,
-           fill = ipse,
-           color = ipse)) + 
-  geom_line() + 
-  geom_ribbon() + 
-  facet_geo(~state) + 
-  scale_x_continuous(breaks = c(2015)) + 
-  scale_y_continuous(breaks = c(0, 30, 60)) + 
-  labs(x = "", y = "Rate per 1,000", fill = "IPSE",
-       color = "IPSE") + 
-  theme_minimal()
-
-ggsave("./vis/IPSE_map.pdf", width = 7, height = 5)
+# 
+# library(geofacet)
+# ggplot(temp,
+#        aes(x = year, ymin = r_min,
+#            ymax = r_max,
+#            y = r_mn,
+#            fill = ipse,
+#            color = ipse)) + 
+#   geom_line() + 
+#   geom_ribbon() + 
+#   facet_geo(~state) + 
+#   scale_x_continuous(breaks = c(2015)) + 
+#   scale_y_continuous(breaks = c(0, 30, 60)) + 
+#   labs(x = "", y = "Rate per 1,000", fill = "IPSE",
+#        color = "IPSE") + 
+#   theme_minimal()
+# 
+# ggsave("./vis/IPSE_map.pdf", width = 7, height = 5)
 
 ### look at state_ts for r
 full_panel<-state_dat %>% 
@@ -167,6 +142,8 @@ full_panel<-full_panel %>%
   mutate(race_ethn = "Total") %>% 
   ungroup() %>% 
   bind_rows(full_panel)
+
+write_csv(full_panel, "fig3_dat.png")
 
 ### 2019 data
 dat_19<-dat_in %>% 
