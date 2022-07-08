@@ -11,7 +11,6 @@
 
 # load packages -----------------------------------------------------------
 
-library(geofacet)
 library(tidyverse)
 library(knitr)
 library(gridExtra)
@@ -19,48 +18,6 @@ library(scales)
 library(RColorBrewer)
 
 theme_set(theme_bw())
-
-# process data ------------------------------------------------------------
-
-source("make_state_data.R")
-
-# decsriptive table -------------------------------------------------------
-
-pop_index<-dat_in %>% 
-  select(state, year) %>% 
-  distinct() %>% 
-  left_join(pop) %>% 
-  group_by(race_ethn) %>% 
-  summarize(pop = sum(pop))
-
-tab1_all<-dat_in %>% 
-  group_by(race_ethn, .imp) %>% 
-  summarize(n = sum(n)) %>% 
-  summarize(n_mn = mean(n),
-            n_max = max(n),
-            n_min = min(n)) %>% 
-  left_join(pop_index) %>% 
-  mutate(r_mn = n_mn/pop*1e3,
-         r_max = n_max/pop*1e3,
-         r_min = n_min/pop*1e3)
-
-tab1_ipse<-dat_in %>% 
-  filter(ipse==1) %>% 
-  group_by(race_ethn, .imp) %>% 
-  summarize(n = sum(n)) %>% 
-  summarize(n_mn = mean(n),
-            n_max = max(n),
-            n_min = min(n)) %>% 
-  left_join(pop_index) %>% 
-  mutate(r_mn = n_mn/pop*1e3,
-         r_max = n_max/pop*1e3,
-         r_min = n_min/pop*1e3)
-
-state_years<-dat_in %>% 
-  select(state, year) %>% 
-  distinct() %>% 
-  group_by(state) %>% 
-  summarize(n = n())
 
 
 # figure 1 ----------------------------------------------------------------
@@ -120,6 +77,8 @@ ggsave("./vis/fig2.png", width = 6, height = 4)
 
 
 # figure 3 ----------------------------------------------------------------
+full_panel<-read_csv("./data/fig3_dat.csv")
+
 
 ggplot(full_panel %>% 
          filter(race_ethn=="Total") %>% 
@@ -141,7 +100,19 @@ ggplot(full_panel %>%
 ggsave("./vis/fig3.png", width = 8, height = 4)
   
 # figure 4 ----------------------------------------------------------------
+dat_19<-read_csv("./data/fig4_dat.csv")
 
+dat_19 <- dat_19 %>% 
+  mutate(race_ethn = factor(race_ethn, levels = c("Total", "AIAN", "Asian/PI", "Black", "Latinx", "White"))) 
+
+order<-dat_19 %>% 
+  filter(race_ethn=="Total") %>% 
+  arrange(r_mn) %>% 
+  mutate(ord = 1:n()) %>% 
+  select(state, ord)
+
+dat_19<-dat_19 %>% 
+  mutate(state = factor(state, levels = order$state))
 ggplot(dat_19,
        aes(x = state, 
            y = r_mn,
@@ -161,6 +132,20 @@ dat_19 %>%
   summarize(rate = sum(n_mn) / sum(pop) * 1e3)
              
 # figure 5 ----------------------------------------------------------------
+dat_19_disp<-read_csv("./data/fig5_dat.csv")
+
+order<-dat_19_disp %>% 
+  filter(race_ethn=="AIAN") %>% 
+  arrange(d) %>% 
+  mutate(ord = 1:n()) %>% 
+  select(state, ord)
+
+dat_19_disp<-dat_19_disp %>% 
+  mutate(state = factor(state, levels = order$state)) %>% 
+  mutate(grt1 = ifelse(d_min>1, 
+                       "Greater than white rate",
+                       "Less than or equal to white rate"))
+
 
 ggplot(dat_19_disp,
        aes(x = state, 
